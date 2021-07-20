@@ -29,6 +29,8 @@ public final class EditImageViewController: UIViewController {
     private var quadViewHeightConstraint = NSLayoutConstraint()
     public weak var delegate: EditImageViewDelegate?
     
+    private var touchDownGesture: UIGestureRecognizer?
+    
     private lazy var imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.clipsToBounds = true
@@ -107,9 +109,14 @@ public final class EditImageViewController: UIViewController {
     }
     
     private func addLongGesture(of controller: ZoomGestureController) {
+        if let gesture = touchDownGesture {
+            view.removeGestureRecognizer(gesture)
+        }
+        
         let touchDown = UILongPressGestureRecognizer(target: controller,
                                                      action: #selector(controller.handle(pan:)))
         touchDown.minimumPressDuration = 0
+        touchDownGesture = touchDown
         view.addGestureRecognizer(touchDown)
     }
     
@@ -141,9 +148,28 @@ public final class EditImageViewController: UIViewController {
     }
     
     /// This function allow user to rotate image by 90 degree each and will reload image on image view.
-    public func rotateImage() {
-        let rotationAngle = Measurement<UnitAngle>(value: 90, unit: .degrees)
+    public func rotateImage(for degree: Double = 90) {
+        let rotationAngle = Measurement<UnitAngle>(value: degree, unit: .degrees)
         reloadImage(withAngle: rotationAngle)
+    }
+    
+    public func update(with image: UIImage,
+                      quad: Quadrilateral?,
+                      rotateImage: Bool = true,
+                      strokeColor: CGColor? = nil) {
+        self.image = rotateImage ? image.applyingPortraitOrientation() : image
+        self.quad = quad ?? EditImageViewController.defaultQuad(allOfImage: image)
+        self.strokeColor = strokeColor
+        
+        zoomGestureController = ZoomGestureController(image: image, quadView: quadView)
+        addLongGesture(of: zoomGestureController)
+        
+        updateQuad()
+    }
+    
+    public func updateQuad() {
+        adjustQuadViewConstraints()
+        displayQuad()
     }
     
     private func reloadImage(withAngle angle: Measurement<UnitAngle>) {

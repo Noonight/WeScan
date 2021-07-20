@@ -136,6 +136,17 @@ public final class CameraScannerViewController: UIViewController {
         }
     }
     
+    /// updates current scan session
+    public func reload() {
+        UIApplication.shared.isIdleTimerDisabled = false
+        captureSessionManager?.stop()
+        
+        CaptureSession.current.isEditing = false
+        quadView.removeQuadrilateral()
+        captureSessionManager?.start()
+        UIApplication.shared.isIdleTimerDisabled = true
+    }
+    
     public func capture() {
         captureSessionManager?.capturePhoto()
     }
@@ -150,6 +161,13 @@ public final class CameraScannerViewController: UIViewController {
         case .unknown, .unavailable:
             flashEnabled = false
         }
+    }
+    
+    public func setFlash(_ value: Bool) {
+        let state = CaptureSession.current.setFlash(value)
+        flashEnabled = state == .on
+            ?   true
+            :   false
     }
 
     public func toggleAutoScan() {

@@ -42,4 +42,29 @@ extension CaptureSession {
         
         return .unknown
     }
+    
+    func setFlash(_ value: Bool) -> FlashState {
+        guard let device = device, device.isTorchAvailable else { return .unavailable }
+        
+        do {
+            try device.lockForConfiguration()
+        } catch {
+            return .unknown
+        }
+        
+        defer {
+            device.unlockForConfiguration()
+        }
+        
+        switch value {
+        case true:
+            device.torchMode = .on
+            return .on
+        case false:
+            device.torchMode = .off
+            return .off
+        }
+        
+        return .unknown
+    }
 }
