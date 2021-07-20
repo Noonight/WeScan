@@ -19,6 +19,11 @@ public protocol EditImageViewDelegate: class {
 /// The `EditImageViewController` class is individual for rotate, crop image
 public final class EditImageViewController: UIViewController {
     
+    public enum Rotation {
+        case left
+        case right
+    }
+    
     /// The image the quadrilateral was detected on.
     private var image: UIImage
     
@@ -148,7 +153,10 @@ public final class EditImageViewController: UIViewController {
     }
     
     /// This function allow user to rotate image by 90 degree each and will reload image on image view.
-    public func rotateImage(for degree: Double = 90) {
+    public func rotateImage(to orientation: Rotation) {
+        let degree = orientation == .left
+            ?   -90.0
+            :   90.0
         let rotationAngle = Measurement<UnitAngle>(value: degree, unit: .degrees)
         reloadImage(withAngle: rotationAngle)
     }
@@ -174,7 +182,8 @@ public final class EditImageViewController: UIViewController {
     
     private func reloadImage(withAngle angle: Measurement<UnitAngle>) {
         guard let newImage = image.rotated(by: angle) else { return }
-        let newQuad = EditImageViewController.defaultQuad(allOfImage: newImage)
+        let radians = CGFloat(CGFloat(angle.value) * CGFloat.pi / 180)
+        let newQuad = quad.scale(self.image.size, newImage.size, withRotationAngle: radians)
         
         image = newImage
         imageView.image = image
